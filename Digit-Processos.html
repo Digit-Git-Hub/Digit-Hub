@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digit Hub — Editor de Processos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --digit-blue:#2563EB;--digit-dark:#1E3A8A;--digit-cyan:#06B6D4;
+  --bg:#F1F5F9;--bg2:#E2E8F0;--bg3:#CBD5E1;
+  --text:#1E293B;--text2:#475569;--text3:#94A3B8;
+  --border:rgba(37,99,235,0.12);--border2:rgba(37,99,235,0.28);
+  --white:#ffffff;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0F172A;--bg2:#1E293B;--bg3:#334155;
+  --text:#E2E8F0;--text2:#94A3B8;--text3:#64748B;
+  --border:rgba(96,165,250,0.15);--border2:rgba(96,165,250,0.3);
+  --white:#1E293B;
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+#toolbar{display:flex;align-items:center;gap:5px;padding:7px 12px;background:linear-gradient(135deg,#1E3A8A 0%,#2563EB 55%,#0EA5E9 100%);flex-wrap:wrap;flex-shrink:0;box-shadow:0 2px 12px rgba(37,99,235,0.35)}
+.tb-sep{width:1px;height:20px;background:rgba(255,255,255,0.22);margin:0 2px}
+.tb-label{font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border:1px solid rgba(255,255,255,0.22);border-radius:6px;background:rgba(255,255,255,0.1);color:#fff;font-size:11.5px;cursor:pointer;transition:all .12s;white-space:nowrap;font-family:inherit}
+.btn:hover{background:rgba(255,255,255,0.22);border-color:rgba(255,255,255,0.45)}
+.btn.active{background:rgba(255,255,255,0.95);border-color:white;font-weight:600;color:#1E3A8A}
+.btn svg{width:13px;height:13px;flex-shrink:0}
+.btn-danger{color:rgba(255,190,190,0.9)!important}
+#save-badge{font-size:10px;color:rgba(255,255,255,0.55);padding:2px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.15);margin-left:auto;white-space:nowrap;transition:all .3s}
+#save-badge.saved{color:rgba(180,255,180,0.9);border-color:rgba(180,255,180,0.3)}
+#main{display:flex;flex:1;overflow:hidden}
+#sidebar{width:150px;border-right:1px solid var(--border);padding:8px 7px;overflow-y:auto;background:var(--white);flex-shrink:0}
+#sidebar h3{font-size:9px;font-weight:700;color:var(--text3);margin-bottom:5px;margin-top:9px;text-transform:uppercase;letter-spacing:.06em}
+#sidebar h3:first-child{margin-top:0}
+.side-item{padding:5px 7px;border-radius:6px;font-size:11px;cursor:grab;border:1px solid var(--border);margin-bottom:3px;background:var(--bg2);display:flex;align-items:center;gap:6px;color:var(--text);transition:border-color .12s,background .12s}
+.side-item:hover{border-color:var(--digit-blue);background:rgba(37,99,235,0.06)}
+.side-item:active{cursor:grabbing}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#canvas-wrap{flex:1;overflow:hidden;position:relative;background:#F5F8FF;background-image:radial-gradient(circle,rgba(37,99,235,0.13) 1px,transparent 1px);background-size:24px 24px}
+#canvas{position:absolute;transform-origin:0 0;will-change:transform}
+svg#dg{overflow:visible;display:block}
+.node-shape{cursor:pointer}
+.edge-path{stroke-width:1.5;fill:none;cursor:pointer;opacity:.65}
+.edge-path:hover,.edge-path.esel{opacity:1;stroke-width:2.5}
+.port-c{fill:white;stroke:#2563EB;stroke-width:1.5;cursor:crosshair}
+.port-c:hover{fill:#2563EB}
+#panel{position:absolute;bottom:14px;right:14px;width:188px;background:var(--white);border:1px solid var(--border2);border-top:3px solid #2563EB;border-radius:10px;padding:12px;display:none;z-index:100;box-shadow:0 4px 20px rgba(37,99,235,0.14)}
+#panel h4{font-size:9px;font-weight:700;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+.pr{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.pr label{font-size:10px;color:var(--text2);font-weight:500}
+.pr input,.pr select{padding:4px 7px;border:1px solid var(--border);border-radius:5px;font-size:11px;background:var(--bg2);color:var(--text);font-family:inherit;outline:none}
+.pr input:focus,.pr select:focus{border-color:#2563EB}
+.dbtn{width:100%;margin-top:4px;padding:5px;border:1px solid #fca5a5;border-radius:5px;background:transparent;color:#b91c1c;font-size:11px;cursor:pointer;font-family:inherit}
+.dbtn:hover{background:#fef2f2}
+#status{position:absolute;bottom:14px;left:14px;font-size:10.5px;color:#64748B;pointer-events:none;font-weight:500}
+#hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#1E3A8A;pointer-events:none;background:rgba(255,255,255,0.93);border:1px solid rgba(37,99,235,0.2);border-radius:20px;padding:4px 14px;white-space:nowrap;transition:opacity .6s;font-weight:500}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span style="display:flex;align-items:center;gap:5px;margin-right:4px">
+    <span style="background:white;color:#1E3A8A;border-radius:5px;padding:2px 7px;font-size:12px;font-weight:900;letter-spacing:-.03em">digit</span>
+    <span style="color:rgba(255,255,255,0.88);font-size:13px;font-weight:600">Hub</span>
+  </span>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Tool</span>
+  <button class="btn active" id="btn-select" onclick="setTool('select')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-7 1-4 7z"/></svg>Seleccionar
+  </button>
+  <button class="btn" id="btn-connect" onclick="setTool('connect')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Ligar [C]
+  </button>
+  <button class="btn" onclick="addLane()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>+ Lane
+  </button>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Vista</span>
+  <button class="btn" onclick="zoomBy(-0.15)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M8 11h6"/></svg>
+  </button>
+  <button class="btn" onclick="zoomBy(0.15)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M11 8v6M8 11h6"/></svg>
+  </button>
+  <button class="btn" onclick="resetView()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>Reset
+  </button>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Undo</span>
+  <button class="btn" onclick="undo()" title="Ctrl+Z">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h13a5 5 0 0 1 0 10H7"/><polyline points="3 5 3 9 7 9"/></svg>
+  </button>
+  <button class="btn" onclick="redo()" title="Ctrl+Y">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 9H8a5 5 0 0 0 0 10h9"/><polyline points="21 5 21 9 17 9"/></svg>
+  </button>
+  <div class="tb-sep"></div>
+  <button class="btn" onclick="loadDemo()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Demo
+  </button>
+  <button class="btn" onclick="exportSVG()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>SVG
+  </button>
+  <button class="btn btn-danger" onclick="clearAll()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Limpar
+  </button>
+  <span id="save-badge">● sem alterações</span>
+</div>
+
+<div id="main">
+  <div id="sidebar">
+    <h3>Nós</h3>
+    <div class="side-item" draggable="true" data-type="process" ondragstart="sdrag(event)"><span class="dot" style="background:#2563EB"></span>Processo</div>
+    <div class="side-item" draggable="true" data-type="source" ondragstart="sdrag(event)"><span class="dot" style="background:#059669"></span>Fonte dados</div>
+    <div class="side-item" draggable="true" data-type="storage" ondragstart="sdrag(event)"><span class="dot" style="background:#7C3AED"></span>Armazém</div>
+    <div class="side-item" draggable="true" data-type="model" ondragstart="sdrag(event)"><span class="dot" style="background:#D97706"></span>Modelo / AI</div>
+    <div class="side-item" draggable="true" data-type="output" ondragstart="sdrag(event)"><span class="dot" style="background:#DC2626"></span>Output</div>
+    <div class="side-item" draggable="true" data-type="event" ondragstart="sdrag(event)"><span class="dot" style="background:#16A34A"></span>Evento</div>
+    <div class="side-item" draggable="true" data-type="api" ondragstart="sdrag(event)"><span class="dot" style="background:#0891B2"></span>API</div>
+    <div class="side-item" draggable="true" data-type="decision" ondragstart="sdrag(event)"><span class="dot" style="background:#64748B"></span>Decisão</div>
+    <h3>Infra</h3>
+    <div class="side-item" draggable="true" data-type="cloud" ondragstart="sdrag(event)"><span class="dot" style="background:#0E7490"></span>Cloud</div>
+    <div class="side-item" draggable="true" data-type="queue" ondragstart="sdrag(event)"><span class="dot" style="background:#4F46E5"></span>Fila / Queue</div>
+    <div class="side-item" draggable="true" data-type="user" ondragstart="sdrag(event)"><span class="dot" style="background:#9333EA"></span>Utilizador</div>
+  </div>
+
+  <div id="canvas-wrap"
+    onmousedown="wmd(event)" onmousemove="wmm(event)" onmouseup="wmu(event)"
+    onwheel="ww(event)" ondragover="e=>e.preventDefault()" ondrop="wdrop(event)">
+    <div id="canvas">
+      <svg id="dg" width="3000" height="2000">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="arr-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <g id="gL"></g>
+        <g id="gE"></g>
+        <g id="gN"></g>
+        <g id="gP"></g>
+        <g id="gT"></g>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div id="panel">
+  <h4>Propriedades</h4>
+  <div class="pr"><label>Etiqueta</label><input id="p-lbl" oninput="pLbl()"></div>
+  <div class="pr"><label>Tipo</label>
+    <select id="p-typ" onchange="pTyp()">
+      <option value="process">Processo</option><option value="source">Fonte dados</option>
+      <option value="storage">Armazém</option><option value="model">Modelo / AI</option>
+      <option value="output">Output</option><option value="event">Evento</option>
+      <option value="api">API</option><option value="decision">Decisão</option>
+      <option value="cloud">Cloud</option><option value="queue">Fila / Queue</option>
+      <option value="user">Utilizador</option>
+    </select>
+  </div>
+  <div class="pr"><label>Sub-etiqueta</label><input id="p-sub" oninput="pSub()"></div>
+  <button class="dbtn" onclick="delSel()">🗑 Apagar</button>
+</div>
+<div id="status">100%</div>
+<div id="hint">Arrasta nós da barra lateral · C = ligar · Ctrl+Z = desfazer</div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────
+const COLORS={process:'#2563EB',source:'#059669',storage:'#7C3AED',model:'#D97706',output:'#DC2626',event:'#16A34A',api:'#0891B2',decision:'#64748B',cloud:'#0E7490',queue:'#4F46E5',user:'#9333EA'};
+const LABELS={process:'Processo',source:'Fonte dados',storage:'Armazém',model:'Modelo / AI',output:'Output',event:'Evento',api:'API',decision:'Decisão',cloud:'Cloud',queue:'Fila / Queue',user:'Utilizador'};
+const SAVE_KEY='digit_hub_v1';
+const MAX_UNDO=30;
+
+// ── STATE ──────────────────────────────────────────────────
+let S={nodes:[],edges:[],lanes:[],nid:1};
+let V={x:40,y:40,sc:1};
+let tool='select';
+let drag=null,pan=null,conn=null;
+let selN=null,selE=null;
+let sdata=null;
+let undoStack=[],redoStack=[];
+let saveTimer=null,dirty=false;
+let rafPending=false;
+
+// ── DOM REFS ───────────────────────────────────────────────
+const wrap=document.getElementById('canvas-wrap');
+const canvas=document.getElementById('canvas');
+const svg=document.getElementById('dg');
+const gL=document.getElementById('gL'),gE=document.getElementById('gE');
+const gN=document.getElementById('gN'),gP=document.getElementById('gP'),gT=document.getElementById('gT');
+const panel=document.getElementById('panel');
+const statusEl=document.getElementById('status');
+const saveBadge=document.getElementById('save-badge');
+const hintEl=document.getElementById('hint');
+
+// ── VIEW ───────────────────────────────────────────────────
+function applyView(){
+  canvas.style.transform=`translate(${V.x}px,${V.y}px) scale(${V.sc})`;
+  statusEl.textContent=Math.round(V.sc*100)+'%';
+}
+function zoomBy(d,cx,cy){
+  const r=wrap.getBoundingClientRect();
+  cx=cx??(r.width/2);cy=cy??(r.height/2);
+  const old=V.sc;
+  V.sc=Math.max(0.12,Math.min(4,V.sc+d));
+  const f=V.sc/old;
+  V.x=cx-(cx-V.x)*f;V.y=cy-(cy-V.y)*f;
+  applyView();
+}
+function resetView(){V.x=40;V.y=40;V.sc=1;applyView();}
+function pt(e){const r=wrap.getBoundingClientRect();return{x:(e.clientX-r.left-V.x)/V.sc,y:(e.clientY-r.top-V.y)/V.sc};}
+
+// ── SAVE / LOAD ────────────────────────────────────────────
+function snapshot(){return JSON.parse(JSON.stringify(S));}
+
+function markDirty(){
+  dirty=true;
+  saveBadge.textContent='● não guardado';
+  saveBadge.classList.remove('saved');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(autoSave,800);
+}
+
+function autoSave(){
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify({S,V}));
+    saveBadge.textContent='✓ guardado';
+    saveBadge.classList.add('saved');
+    dirty=false;
+  }catch(e){saveBadge.textContent='⚠ erro ao guardar';}
+}
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw)return false;
+    const d=JSON.parse(raw);
+    if(d.S){S=d.S;if(d.V)V=d.V;return true;}
+  }catch(e){}
+  return false;
+}
+
+// ── UNDO / REDO ────────────────────────────────────────────
+function pushUndo(){
+  undoStack.push(snapshot());
+  if(undoStack.length>MAX_UNDO)undoStack.shift();
+  redoStack=[];
+}
+
+function undo(){
+  if(!undoStack.length)return;
+  redoStack.push(snapshot());
+  S=undoStack.pop();
+  renderAll();markDirty();
+}
+function redo(){
+  if(!redoStack.length)return;
+  undoStack.push(snapshot());
+  S=redoStack.pop();
+  renderAll();markDirty();
+}
+
+// ── HELPERS ────────────────────────────────────────────────
+function mkSvg(tag,a={}){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const[k,v]of Object.entries(a))el.setAttribute(k,v);
+  return el;
+}
+function hexA(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return`rgba(${r},${g},${b},${a})`;
+}
+function nc(n){return[n.x+(n.w||140)/2,n.y+(n.h||44)/2];}
+
+// ── RENDER NODE (selective - only re-render changed node) ──
+function renderNode(n){
+  let g=document.getElementById('nd-'+n.id);
+  if(!g){g=mkSvg('g',{id:'nd-'+n.id});gN.appendChild(g);}
+  else g.innerHTML='';
+  g.setAttribute('transform',`translate(${n.x},${n.y})`);
+  const w=n.w||140,h=n.h||44,col=n.color||COLORS[n.type]||'#888';
+  const isSel=selN===n.id;
+  let shape;
+  if(n.type==='decision'){
+    const hw=w/2,hh=h/2;
+    shape=mkSvg('polygon',{points:`${hw},0 ${w},${hh} ${hw},${h} 0,${hh}`,fill:hexA(col,.13),stroke:col,'stroke-width':isSel?2.5:1});
+  }else{
+    shape=mkSvg('rect',{width:w,height:h,rx:8,fill:hexA(col,.13),stroke:col,'stroke-width':isSel?2.5:1});
+  }
+  shape.classList.add('node-shape');
+  g.appendChild(shape);
+  const ty=n.sub?h/2-7:h/2;
+  const lbl=mkSvg('text',{x:w/2,y:ty,'text-anchor':'middle','dominant-baseline':'central',fill:col,'font-size':'12','font-weight':'600'});
+  lbl.style.pointerEvents='none';lbl.textContent=n.label||'Nó';
+  g.appendChild(lbl);
+  if(n.sub){
+    const sub=mkSvg('text',{x:w/2,y:h/2+9,'text-anchor':'middle','dominant-baseline':'central',fill:'#64748B','font-size':'10'});
+    sub.style.pointerEvents='none';sub.textContent=n.sub;g.appendChild(sub);
+  }
+  g.style.cursor='pointer';
+  g.onmousedown=e=>{e.stopPropagation();nmd(e,n);};
+  g.ondblclick=e=>{e.stopPropagation();ndbl(n);};
+}
+
+// ── RENDER EDGE ────────────────────────────────────────────
+function renderEdge(ed){
+  let g=document.getElementById('ed-'+ed.id);
+  if(!g){g=mkSvg('g',{id:'ed-'+ed.id});gE.appendChild(g);}
+  else g.innerHTML='';
+  const src=S.nodes.find(n=>n.id===ed.src),dst=S.nodes.find(n=>n.id===ed.dst);
+  if(!src||!dst)return;
+  const[sx,sy]=nc(src),[dx,dy]=nc(dst);
+  const my=(sy+dy)/2,isSel=selE===ed.id;
+  const col=ed.color||'#64748B';
+  const p=mkSvg('path',{d:`M${sx},${sy} C${sx},${my} ${dx},${my} ${dx},${dy}`,stroke:col,'stroke-width':isSel?2.5:1.5,fill:'none','marker-end':'url(#arr)',opacity:isSel?1:.65});
+  p.classList.add('edge-path');if(isSel)p.classList.add('esel');
+  p.style.cursor='pointer';
+  p.onclick=e=>{e.stopPropagation();selEdge(ed.id);};
+  g.appendChild(p);
+  if(ed.label){
+    const t=mkSvg('text',{x:(sx+dx)/2,y:my-8,'text-anchor':'middle','dominant-baseline':'central',fill:'#64748B','font-size':'10'});
+    t.textContent=ed.label;g.appendChild(t);
+  }
+}
+
+// ── RENDER LANE ────────────────────────────────────────────
+function renderLane(l){
+  let g=document.getElementById('ln-'+l.id);
+  if(!g){g=mkSvg('g',{id:'ln-'+l.id});gL.insertBefore(g,gL.firstChild);}
+  else g.innerHTML='';
+  const bg=mkSvg('rect',{x:l.x,y:l.y,width:l.w,height:l.h,rx:10,fill:l.fill||'rgba(37,99,235,0.05)',stroke:'rgba(37,99,235,0.15)','stroke-width':1});
+  const hd=mkSvg('rect',{x:l.x,y:l.y,width:l.w,height:28,rx:10,fill:'white',stroke:'rgba(37,99,235,0.15)','stroke-width':1});
+  const lb=mkSvg('text',{x:l.x+l.w/2,y:l.y+14,'text-anchor':'middle','dominant-baseline':'central',fill:'#475569','font-size':'11','font-weight':'600'});
+  lb.textContent=l.label||'Fase';
+  g.appendChild(bg);g.appendChild(hd);g.appendChild(lb);
+  g.style.cursor='move';
+  const lmd=e=>{e.stopPropagation();const p=pt(e);drag={id:l.id,type:'lane',ox:p.x-l.x,oy:p.y-l.y};};
+  [bg,hd,lb].forEach(el=>el.onmousedown=lmd);
+  g.ondblclick=e=>{const v=prompt('Etiqueta da lane:',l.label);if(v!==null){pushUndo();l.label=v;renderLane(l);markDirty();}};
+}
+
+// ── RENDER ALL (batched via rAF) ───────────────────────────
+function renderAll(){
+  if(rafPending)return;
+  rafPending=true;
+  requestAnimationFrame(()=>{
+    rafPending=false;
+    gL.innerHTML='';gE.innerHTML='';gN.innerHTML='';
+    S.lanes.forEach(renderLane);
+    S.edges.forEach(renderEdge);
+    S.nodes.forEach(renderNode);
+    if(tool==='connect')renderPorts();
+  });
+}
+
+// ── PORTS ──────────────────────────────────────────────────
+function clearPorts(){gP.innerHTML='';}
+function renderPorts(){
+  clearPorts();
+  S.nodes.forEach(n=>{
+    const w=n.w||140,h=n.h||44;
+    [[w/2,0],[w,h/2],[w/2,h],[0,h/2]].forEach(([px,py])=>{
+      const c=mkSvg('circle',{cx:n.x+px,cy:n.y+py,r:5,class:'port-c'});
+      c.onmousedown=e=>{e.stopPropagation();conn={srcId:n.id,x:n.x+px,y:n.y+py};};
+      gP.appendChild(c);
+    });
+  });
+}
+
+// ── TOOL ───────────────────────────────────────────────────
+function setTool(t){
+  tool=t;
+  document.querySelectorAll('.btn[id^="btn-"]').forEach(b=>b.classList.toggle('active',b.id==='btn-'+t));
+  clearPorts();
+  if(t==='connect')renderPorts();
+  svg.style.cursor=t==='connect'?'crosshair':'default';
+}
+
+// ── NODE INTERACTIONS ──────────────────────────────────────
+function nmd(e,n){
+  if(tool==='connect'){
+    if(conn&&conn.srcId!==n.id){
+      pushUndo();
+      const ed={id:'e'+(S.nid++),src:conn.srcId,dst:n.id,color:'#94A3B8'};
+      S.edges.push(ed);renderEdge(ed);conn=null;gT.innerHTML='';markDirty();
+    }
+    return;
+  }
+  selNode(n.id);
+  const p=pt(e);
+  drag={id:n.id,type:'node',ox:p.x-n.x,oy:p.y-n.y,moved:false};
+}
+function ndbl(n){
+  const v=prompt('Etiqueta:',n.label);
+  if(v!==null){pushUndo();n.label=v;renderNode(n);markDirty();}
+}
+
+// ── SELECTION ──────────────────────────────────────────────
+function selNode(id){
+  selN=id;selE=null;
+  const n=S.nodes.find(x=>x.id===id);
+  if(n){
+    panel.style.display='block';
+    document.getElementById('p-lbl').value=n.label||'';
+    document.getElementById('p-typ').value=n.type||'process';
+    document.getElementById('p-sub').value=n.sub||'';
+  }
+  // only re-render nodes for selection highlight (fast)
+  S.nodes.forEach(renderNode);
+  S.edges.forEach(renderEdge);
+}
+function selEdge(id){
+  selE=id;selN=null;
+  const ed=S.edges.find(x=>x.id===id);
+  panel.style.display='block';
+  document.getElementById('p-lbl').value=ed?.label||'';
+  document.getElementById('p-typ').value='process';
+  document.getElementById('p-sub').value='';
+  S.nodes.forEach(renderNode);S.edges.forEach(renderEdge);
+}
+function clearSel(){selN=null;selE=null;panel.style.display='none';}
+
+// ── PROPS ──────────────────────────────────────────────────
+function pLbl(){
+  const v=document.getElementById('p-lbl').value;
+  if(selN){const n=S.nodes.find(x=>x.id===selN);if(n){n.label=v;renderNode(n);markDirty();}}
+  if(selE){const e=S.edges.find(x=>x.id===selE);if(e){e.label=v;renderEdge(e);markDirty();}}
+}
+function pTyp(){
+  const v=document.getElementById('p-typ').value;
+  if(selN){const n=S.nodes.find(x=>x.id===selN);if(n){pushUndo();n.type=v;n.color=COLORS[v];renderNode(n);markDirty();}}
+}
+function pSub(){
+  const v=document.getElementById('p-sub').value;
+  if(selN){const n=S.nodes.find(x=>x.id===selN);if(n){n.sub=v;renderNode(n);markDirty();}}
+}
+
+function delSel(){
+  pushUndo();
+  if(selN){
+    S.nodes=S.nodes.filter(x=>x.id!==selN);
+    S.edges=S.edges.filter(x=>x.src!==selN&&x.dst!==selN);
+  }
+  if(selE)S.edges=S.edges.filter(x=>x.id!==selE);
+  clearSel();renderAll();markDirty();
+}
+
+// ── CANVAS EVENTS ──────────────────────────────────────────
+function wmd(e){
+  if(e.target===wrap||e.target===canvas||e.target===svg||e.target.id==='dg'){
+    if(e.button===1||(e.button===0&&e.altKey)){
+      pan={mx:e.clientX,my:e.clientY,vx:V.x,vy:V.y};
+    }else if(e.button===0){
+      clearSel();panel.style.display='none';
+      S.nodes.forEach(renderNode);S.edges.forEach(renderEdge);
+    }
+  }
+}
+
+// throttle mousemove to rAF
+let lastMM=null;
+function wmm(e){
+  lastMM=e;
+  if(!rafPending){
+    rafPending=true;
+    requestAnimationFrame(()=>{
+      rafPending=false;
+      const ev=lastMM;if(!ev)return;
+      if(pan){
+        V.x=pan.vx+(ev.clientX-pan.mx);V.y=pan.vy+(ev.clientY-pan.my);
+        applyView();return;
+      }
+      if(drag){
+        const p=pt(ev);
+        if(drag.type==='node'){
+          const n=S.nodes.find(x=>x.id===drag.id);
+          if(n){
+            if(!drag.moved){pushUndo();drag.moved=true;}
+            n.x=p.x-drag.ox;n.y=p.y-drag.oy;
+            renderNode(n);
+            S.edges.filter(ed=>ed.src===n.id||ed.dst===n.id).forEach(renderEdge);
+          }
+          if(tool==='connect')renderPorts();
+        }else if(drag.type==='lane'){
+          const l=S.lanes.find(x=>x.id===drag.id);
+          if(l){
+            if(!drag.moved){pushUndo();drag.moved=true;}
+            l.x=p.x-drag.ox;l.y=p.y-drag.oy;renderLane(l);
+          }
+        }
+        return;
+      }
+      if(conn){
+        const p=pt(ev);
+        gT.innerHTML='';
+        const path=mkSvg('path',{d:`M${conn.x},${conn.y} C${conn.x},${(conn.y+p.y)/2} ${p.x},${(conn.y+p.y)/2} ${p.x},${p.y}`,stroke:'#2563EB','stroke-width':'1.5',fill:'none','stroke-dasharray':'6 4','marker-end':'url(#arr-b)'});
+        gT.appendChild(path);
+      }
+    });
+  }
+}
+
+function wmu(e){
+  if(drag&&drag.moved)markDirty();
+  pan=null;drag=null;
+  if(conn&&(e.target===svg||e.target===wrap||e.target===canvas)){conn=null;gT.innerHTML='';}
+}
+
+function ww(e){
+  e.preventDefault();
+  const r=wrap.getBoundingClientRect();
+  zoomBy(-e.deltaY*0.001,e.clientX-r.left,e.clientY-r.top);
+}
+
+// ── SIDEBAR DRAG & DROP ────────────────────────────────────
+function sdrag(e){sdata={type:e.currentTarget.dataset.type};}
+function wdrop(e){
+  e.preventDefault();
+  if(!sdata)return;
+  const p=pt(e),t=sdata.type;
+  pushUndo();
+  const n={id:'n'+(S.nid++),type:t,color:COLORS[t],label:LABELS[t]||t,x:p.x-70,y:p.y-22,w:140,h:44};
+  S.nodes.push(n);renderNode(n);
+  sdata=null;
+  if(tool==='connect')renderPorts();
+  markDirty();
+  hintEl.style.opacity='0';
+}
+
+// ── LANE ───────────────────────────────────────────────────
+function addLane(){
+  pushUndo();
+  const l={id:'l'+(S.nid++),label:'Fase',x:60,y:60,w:280,h:420,fill:'rgba(37,99,235,0.05)'};
+  S.lanes.push(l);renderLane(l);markDirty();
+}
+
+// ── EXPORT ─────────────────────────────────────────────────
+function exportSVG(){
+  const s=new XMLSerializer().serializeToString(svg);
+  const b=new Blob([s],{type:'image/svg+xml'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='digit-hub.svg';a.click();
+}
+
+// ── CLEAR ──────────────────────────────────────────────────
+function clearAll(){
+  if(!confirm('Limpar todo o diagrama? Esta acção não pode ser desfeita.'))return;
+  pushUndo();
+  S={nodes:[],edges:[],lanes:[],nid:1};
+  gL.innerHTML='';gE.innerHTML='';gN.innerHTML='';gP.innerHTML='';gT.innerHTML='';
+  clearSel();panel.style.display='none';markDirty();
+}
+
+// ── DEMO ───────────────────────────────────────────────────
+function loadDemo(){
+  if(S.nodes.length>0&&!confirm('Substituir diagrama actual pelo Demo?'))return;
+  pushUndo();
+  S={nodes:[],edges:[],lanes:[],nid:100};
+  const lanes=[
+    {id:'l1',label:'Fontes de dados',x:30,y:30,w:155,h:560,fill:'rgba(5,150,105,0.06)'},
+    {id:'l2',label:'Ingestão',x:200,y:30,w:185,h:560,fill:'rgba(37,99,235,0.06)'},
+    {id:'l3',label:'Processamento',x:400,y:30,w:280,h:560,fill:'rgba(124,58,237,0.06)'},
+    {id:'l4',label:'Modelo',x:695,y:30,w:185,h:560,fill:'rgba(217,119,6,0.06)'},
+    {id:'l5',label:'Serve',x:895,y:30,w:185,h:560,fill:'rgba(220,38,38,0.06)'},
+  ];
+  lanes.forEach(l=>S.lanes.push(l));
+  const nodes=[
+    {id:'s1',type:'source',color:'#059669',label:'Aplicação A',x:45,y:100,w:125,h:40},
+    {id:'s2',type:'source',color:'#059669',label:'Aplicação B',x:45,y:160,w:125,h:40},
+    {id:'s3',type:'source',color:'#0E7490',label:'Base de dados',x:45,y:250,w:125,h:40},
+    {id:'s4',type:'event',color:'#16A34A',label:'IoT / Kafka',x:45,y:370,w:125,h:40},
+    {id:'s5',type:'api',color:'#0891B2',label:'APIs / SFTP',x:45,y:450,w:125,h:40},
+    {id:'i1',type:'process',color:'#2563EB',label:'Pipeline',sub:'Copy Jobs',x:215,y:100,w:155,h:48},
+    {id:'i2',type:'process',color:'#2563EB',label:'Dataflow Gen2',x:215,y:210,w:155,h:40},
+    {id:'i3',type:'storage',color:'#7C3AED',label:'Lakehouse',sub:'Bronze',x:215,y:300,w:155,h:48},
+    {id:'i4',type:'queue',color:'#4F46E5',label:'Eventstream',x:215,y:420,w:155,h:40},
+    {id:'p1',type:'storage',color:'#7C3AED',label:'Lakehouse',sub:'Silver',x:415,y:130,w:150,h:48},
+    {id:'p2',type:'process',color:'#2563EB',label:'Spark Notebook',x:415,y:240,w:150,h:40},
+    {id:'p3',type:'storage',color:'#7C3AED',label:'Warehouse',sub:'Gold',x:415,y:330,w:150,h:48},
+    {id:'p4',type:'event',color:'#16A34A',label:'Eventhouse',x:415,y:430,w:150,h:40},
+    {id:'m1',type:'model',color:'#D97706',label:'Semantic Model',sub:'Direct Lake',x:710,y:150,w:155,h:48},
+    {id:'m2',type:'model',color:'#D97706',label:'ML Model',x:710,y:280,w:155,h:40},
+    {id:'m3',type:'model',color:'#4F46E5',label:'Ontologia',x:710,y:390,w:155,h:40},
+    {id:'o1',type:'output',color:'#DC2626',label:'Report interactivo',x:910,y:110,w:155,h:40},
+    {id:'o2',type:'api',color:'#0891B2',label:'API GraphQL',x:910,y:180,w:155,h:40},
+    {id:'o3',type:'output',color:'#DC2626',label:'Relatório paginado',x:910,y:280,w:155,h:40},
+    {id:'o4',type:'output',color:'#DC2626',label:'Dashboard RT',x:910,y:370,w:155,h:40},
+    {id:'o5',type:'user',color:'#9333EA',label:'Utilizadores',x:910,y:470,w:155,h:40},
+  ];
+  nodes.forEach(n=>{n.w=n.w||140;n.h=n.h||44;S.nodes.push(n);});
+  const edges=[
+    {id:'e1',src:'s1',dst:'i1'},{id:'e2',src:'s2',dst:'i1'},{id:'e3',src:'s3',dst:'i2'},
+    {id:'e4',src:'s3',dst:'i3'},{id:'e5',src:'s4',dst:'i4'},{id:'e6',src:'s5',dst:'i2'},
+    {id:'e7',src:'i1',dst:'i3'},{id:'e8',src:'i2',dst:'i3'},{id:'e9',src:'i3',dst:'p1'},
+    {id:'e10',src:'p1',dst:'p2'},{id:'e11',src:'p2',dst:'p3'},{id:'e12',src:'i4',dst:'p4'},
+    {id:'e13',src:'p3',dst:'m1'},{id:'e14',src:'p3',dst:'m2'},{id:'e15',src:'p4',dst:'m3'},
+    {id:'e16',src:'m1',dst:'o1'},{id:'e17',src:'m1',dst:'o2'},{id:'e18',src:'m2',dst:'o3'},
+    {id:'e19',src:'m3',dst:'o4'},{id:'e20',src:'o4',dst:'o5'},
+  ];
+  edges.forEach(e=>{e.color='#94A3B8';S.edges.push(e);});
+  renderAll();V.x=20;V.y=20;V.sc=0.75;applyView();
+  markDirty();hintEl.style.opacity='0';
+}
+
+// ── KEYBOARD ───────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  const tag=document.activeElement.tagName;
+  if(['INPUT','SELECT','TEXTAREA'].includes(tag))return;
+  if(e.key==='Delete'||e.key==='Backspace')delSel();
+  if(e.key==='Escape'){clearSel();panel.style.display='none';conn=null;gT.innerHTML='';setTool('select');S.nodes.forEach(renderNode);S.edges.forEach(renderEdge);}
+  if(e.key==='c'||e.key==='C')setTool('connect');
+  if(e.key==='s'||e.key==='S')setTool('select');
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}
+  if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='Z'))){e.preventDefault();redo();}
+});
+
+// ── BOOT ───────────────────────────────────────────────────
+(function init(){
+  const had=loadSaved();
+  renderAll();
+  applyView();
+  if(had){
+    saveBadge.textContent='✓ diagrama restaurado';
+    saveBadge.classList.add('saved');
+    setTimeout(()=>{saveBadge.textContent='✓ guardado';},2500);
+    hintEl.style.opacity='0';
+  }
+})();
+</script>
+</body>
+</html>
