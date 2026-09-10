@@ -285,6 +285,26 @@ footer strong{color:white}
 
 .hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(26,46,74,.35),rgba(26,46,74,.65))}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+#trip-map{height:540px;border-radius:16px;border:1px solid var(--border);box-shadow:0 4px 20px rgba(26,46,74,.10);z-index:1}
+.map-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:13px;color:var(--muted);align-items:center}
+.map-legend .ml-item{display:flex;align-items:center;gap:6px}
+.ml-dot{width:14px;height:14px;border-radius:50%;display:inline-block;border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.ml-line{width:26px;height:0;border-top:3px solid var(--navy);display:inline-block}
+.map-note{margin-top:8px;font-size:12px;color:var(--muted)}
+.num-pin{background:var(--navy);color:#fff;border:2px solid #fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.35);font-family:inherit}
+.num-pin.g1{background:var(--teal)}
+.num-pin.g2{background:var(--amber)}
+.num-pin.se{width:34px;height:34px;font-size:10px}
+.poi-pin{background:#fff;border:2px solid var(--teal);border-radius:50%;width:12px;height:12px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.leaflet-popup-content{font-family:inherit;font-size:13px;line-height:1.5;margin:10px 14px}
+.leaflet-popup-content b{color:var(--navy)}
+.pp-dates{color:var(--teal);font-weight:600}
+.pp-hotel{color:var(--muted)}
+@media(max-width:640px){#trip-map{height:420px}}
+</style>
 </head>
 <body>
 
@@ -314,6 +334,7 @@ footer strong{color:white}
     <button class="nav-btn active" onclick="goTo('california')">🌉 Califórnia</button>
     <button class="nav-btn" onclick="goTo('arizona')">🏜 Arizona</button>
     <button class="nav-btn" onclick="goTo('calendario')">📅 Calendário</button>
+    <button class="nav-btn" onclick="goTo('mapa')">📍 Mapa</button>
     <button class="nav-btn" onclick="goTo('roteiro')">🗺 Roteiro</button>
     <button class="nav-btn" onclick="goTo('logistica')">🚗 Logística</button>
     <button class="nav-btn" onclick="goTo('reservas')">✅ Reservas</button>
@@ -346,6 +367,21 @@ footer strong{color:white}
     <div class="cal-header">SETEMBRO 2026</div>
     <div class="cal-grid" id="cal-grid"></div>
   </div>
+</div>
+
+
+<!-- MAPA -->
+<div class="section" id="mapa">
+  <div class="section-title">📍 Mapa da Viagem</div>
+  <div class="section-sub">9 paragens · ~4.000 km em loop · clica nos pins para ver datas e hotéis</div>
+  <div id="trip-map"></div>
+  <div class="map-legend">
+    <span class="ml-item"><span class="ml-dot" style="background:var(--navy)"></span>São Francisco (início &amp; fim)</span>
+    <span class="ml-item"><span class="ml-dot" style="background:var(--teal)"></span>Califórnia</span>
+    <span class="ml-item"><span class="ml-dot" style="background:var(--amber)"></span>Arizona</span>
+    <span class="ml-item"><span class="ml-line"></span>Estrada</span>
+  </div>
+  <div class="map-note">Linhas esquemáticas entre paragens — não representam o traçado exato das estradas. Pontos pequenos = destaques do percurso.</div>
 </div>
 
 <!-- ROTEIRO -->
@@ -459,7 +495,7 @@ footer strong{color:white}
 </div>
 
 <footer>
-  <p>Roteiro preparado para <strong>Gonçalo Vieira</strong> · Partner @ Digit</p>
+  <p>Roteiro preparado por <strong>Gonçalo Vieira</strong> · Partner @ Vanguard Viagens</p>
   <p style="margin-top:.4rem;opacity:.6">Califórnia &amp; Arizona · Setembro 2026 · 12 dias de estrada, cidade e parques</p>
 </footer>
 
@@ -718,6 +754,61 @@ buildCalendar();
 buildLegend();
 buildDays();
 initResCollapse();
+
+// ── MAPA DA VIAGEM ──────────────────────────────────────────────────────────
+function initTripMap(){
+  const stops = [
+    {n:'1·10', name:'São Francisco', lat:37.7749, lng:-122.4194, cls:'se',
+     pop:'<b>São Francisco — início e fim</b><br><span class="pp-dates">14–17 Set · 3 noites</span><br><span class="pp-hotel">🏨 North Beach / Fisherman&#39;s Wharf · 3★</span><br>Golden Gate, Sausalito, Alcatraz e Mission<br>✈ Regresso a Lisboa dia 25'},
+    {n:'2', name:'Monterey', lat:36.6002, lng:-121.8947, cls:'g1',
+     pop:'<b>Monterey</b><br><span class="pp-dates">17–18 Set · 1 noite</span><br><span class="pp-hotel">🏨 Cannery Row</span><br>Começa a Pacific Coast Highway'},
+    {n:'3', name:'Cambria', lat:35.5641, lng:-121.0807, cls:'g1',
+     pop:'<b>Cambria</b><br><span class="pp-dates">18–19 Set · 1 noite</span><br><span class="pp-hotel">🏨 Moonstone Beach · inn local</span><br>Depois do troço de Big Sur'},
+    {n:'4', name:'Santa Barbara', lat:34.4208, lng:-119.6982, cls:'g1',
+     pop:'<b>Santa Barbara</b><br><span class="pp-dates">19–20 Set · 1 noite</span><br><span class="pp-hotel">🏨 Centro histórico / Funk Zone · 3★</span><br>🏖 Dia de descanso'},
+    {n:'5', name:'Los Angeles', lat:34.0195, lng:-118.4912, cls:'g1',
+     pop:'<b>Los Angeles — Santa Monica</b><br><span class="pp-dates">20–21 Set · 1 noite</span><br><span class="pp-hotel">🏨 Santa Monica, junto ao pier · 3★</span>'},
+    {n:'6', name:'Williams, AZ', lat:35.2494, lng:-112.1910, cls:'g2',
+     pop:'<b>Williams, AZ</b><br><span class="pp-dates">21–22 Set · 1 noite</span><br><span class="pp-hotel">🏨 Motel clássico na Route 66</span>'},
+    {n:'7', name:'Page, AZ', lat:36.9147, lng:-111.4558, cls:'g2',
+     pop:'<b>Page, AZ</b><br><span class="pp-dates">22–23 Set · 1 noite</span><br><span class="pp-hotel">🏨 Hotel/motel no centro, perto dos tours</span><br>Antelope Canyon + Horseshoe Bend'},
+    {n:'8', name:'Lone Pine', lat:36.6061, lng:-118.0629, cls:'g1',
+     pop:'<b>Lone Pine</b><br><span class="pp-dates">23–24 Set · 1 noite</span><br><span class="pp-hotel">🏨 Motel western na US-395</span>'},
+    {n:'9', name:'El Portal / Mariposa', lat:37.6747, lng:-119.7846, cls:'g1',
+     pop:'<b>El Portal / Mariposa</b><br><span class="pp-dates">24–25 Set · 1 noite</span><br><span class="pp-hotel">🏨 Lodge às portas de Yosemite</span><br>Chegada pelo Tioga Pass'}
+  ];
+  const pois = [
+    {name:'Big Sur', lat:36.2704, lng:-121.8081, info:'18 Set · o troço mais bonito da PCH'},
+    {name:'Malibu', lat:34.0259, lng:-118.7798, info:'20 Set · paragem a caminho de LA'},
+    {name:'Grand Canyon — South Rim', lat:36.0544, lng:-112.1401, info:'22 Set · a caminho de Page'},
+    {name:'Antelope Canyon', lat:36.8619, lng:-111.3743, info:'23 Set · tour guiado (Navajo)'},
+    {name:'Horseshoe Bend', lat:36.8791, lng:-111.5104, info:'23 Set'},
+    {name:'Tioga Pass', lat:37.9110, lng:-119.2573, info:'24 Set · entrada na Sierra Nevada'},
+    {name:'Yosemite Valley', lat:37.7456, lng:-119.5936, info:'25 Set · antes do regresso a SF'}
+  ];
+  const map = L.map('trip-map', {scrollWheelZoom:false});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom:19
+  }).addTo(map);
+  map.on('click', () => map.scrollWheelZoom.enable());
+  stops.forEach(s => {
+    const icon = L.divIcon({className:'', html:'<div class="num-pin '+s.cls+'">'+s.n+'</div>', iconSize:[28,28], iconAnchor:[14,14]});
+    L.marker([s.lat, s.lng], {icon, title:s.name}).addTo(map).bindPopup(s.pop);
+  });
+  pois.forEach(p => {
+    const icon = L.divIcon({className:'', html:'<div class="poi-pin"></div>', iconSize:[12,12], iconAnchor:[6,6]});
+    L.marker([p.lat, p.lng], {icon, title:p.name}).addTo(map).bindPopup('<b>'+p.name+'</b><br><span class="pp-hotel">'+p.info+'</span>');
+  });
+  const road = {color:'#1a2e4a', weight:3, opacity:.75};
+  const P = n => { const s = stops.find(x=>x.name.indexOf(n)===0); return [s.lat, s.lng]; };
+  const G = n => { const p = pois.find(x=>x.name.indexOf(n)===0); return [p.lat, p.lng]; };
+  L.polyline([P('São Francisco'), P('Monterey'), G('Big Sur'), P('Cambria'), P('Santa Barbara'), G('Malibu'), P('Los Angeles'), P('Williams'), G('Grand Canyon'), P('Page'), P('Lone Pine'), G('Tioga Pass'), G('Yosemite Valley'), P('El Portal'), P('São Francisco')], road).addTo(map);
+  map.fitBounds(L.latLngBounds(stops.map(s => [s.lat, s.lng])).pad(0.08));
+  setTimeout(() => map.invalidateSize(), 300);
+}
+initTripMap();
+
 </script>
 
 </body>
