@@ -267,6 +267,26 @@ footer strong{color:white}
   .nav-btn{padding:7px 7px;font-size:11px}
 }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+#trip-map{height:540px;border-radius:16px;border:1px solid var(--border);box-shadow:0 4px 20px rgba(26,46,74,.10);z-index:1}
+.map-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:13px;color:var(--muted);align-items:center}
+.map-legend .ml-item{display:flex;align-items:center;gap:6px}
+.ml-dot{width:14px;height:14px;border-radius:50%;display:inline-block;border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.ml-line{width:26px;height:0;border-top:3px solid var(--navy);display:inline-block}
+.ml-line.ferry{border-top:3px dashed var(--teal)}
+.map-note{margin-top:8px;font-size:12px;color:var(--muted)}
+.num-pin{background:var(--navy);color:#fff;border:2px solid #fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.35);font-family:inherit}
+.num-pin.al{background:var(--teal)}
+.num-pin.cf{background:var(--amber);width:34px;height:34px;font-size:10px}
+.poi-pin{background:#fff;border:2px solid var(--teal);border-radius:50%;width:12px;height:12px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.leaflet-popup-content{font-family:inherit;font-size:13px;line-height:1.5;margin:10px 14px}
+.leaflet-popup-content b{color:var(--navy)}
+.pp-dates{color:var(--teal);font-weight:600}
+.pp-hotel{color:var(--muted)}
+@media(max-width:640px){#trip-map{height:420px}}
+</style>
 </head>
 <body>
 
@@ -295,6 +315,7 @@ footer strong{color:white}
     <button class="nav-btn active" onclick="goTo('albania')">🇦🇱 Albânia</button>
     <button class="nav-btn" onclick="goTo('grecia')">🇬🇷 Grécia</button>
     <button class="nav-btn" onclick="goTo('calendario')">📅 Calendário</button>
+    <button class="nav-btn" onclick="goTo('mapa')">📍 Mapa</button>
     <button class="nav-btn" onclick="goTo('roteiro')">🗺 Roteiro</button>
     <button class="nav-btn" onclick="goTo('logistica')">🚗 Logística</button>
     <button class="nav-btn" onclick="goTo('reservas')">✅ Reservas</button>
@@ -329,6 +350,22 @@ footer strong{color:white}
   </div>
 </div>
 
+<!-- MAPA -->
+<div class="section" id="mapa">
+  <div class="section-title">📍 Mapa da Viagem</div>
+  <div class="section-sub">13 paragens · clica nos pins para ver datas e hotéis</div>
+  <div id="trip-map"></div>
+  <div class="map-legend">
+    <span class="ml-item"><span class="ml-dot" style="background:var(--teal)"></span>Albânia</span>
+    <span class="ml-item"><span class="ml-dot" style="background:var(--navy)"></span>Grécia</span>
+    <span class="ml-item"><span class="ml-dot" style="background:var(--amber)"></span>Corfu (início &amp; fim)</span>
+    <span class="ml-item"><span class="ml-line"></span>Estrada</span>
+    <span class="ml-item"><span class="ml-line ferry"></span>Ferry</span>
+  </div>
+  <div class="map-note">Linhas esquemáticas entre paragens — não representam o traçado exato das estradas.</div>
+</div>
+
+
 <!-- ROTEIRO -->
 <div class="section-alt" id="roteiro">
 <div class="section">
@@ -360,18 +397,18 @@ footer strong{color:white}
   <div class="res-summary">
     <div class="res-stat paid">
       <div class="res-stat-label">✅ Já Pago</div>
-      <div class="res-stat-val">2.089,05 €</div>
-      <div class="res-stat-sub">696,35 €/pessoa · voos + 4 barcos + 4 hotéis</div>
+      <div class="res-stat-val">2.947,73 €</div>
+      <div class="res-stat-sub">982,58 €/pessoa · voos + 4 barcos + 9 hotéis</div>
     </div>
     <div class="res-stat pending">
       <div class="res-stat-label">📅 Reservado · falta pagar</div>
-      <div class="res-stat-val">2.026,63 €</div>
-      <div class="res-stat-sub">675,54 €/pessoa · 2 carros + 8 hotéis (pagamento agendado)</div>
+      <div class="res-stat-val">1.177,87 €</div>
+      <div class="res-stat-sub">392,62 €/pessoa · 2 carros + 3 hotéis (pagamento agendado)</div>
     </div>
     <div class="res-stat total">
       <div class="res-stat-label">💶 Total da viagem — tudo reservado ✓</div>
-      <div class="res-stat-val">4.115,68 €</div>
-      <div class="res-stat-sub">grupo · 1.371,89 €/pessoa · transportes + alojamento</div>
+      <div class="res-stat-val">4.125,60 €</div>
+      <div class="res-stat-sub">grupo · 1.375,20 €/pessoa · transportes + alojamento</div>
     </div>
   </div>
 
@@ -401,30 +438,30 @@ footer strong{color:white}
   </div>
   </div>
 
-  <div class="res-section-label toggle" onclick="toggleRes(this)"><span>🏨 Hotéis — Reservados</span><span class="res-tog-count">12 hotéis · 16 noites</span><span class="res-tog-total">1.766,41 €<small>588,80 €/pessoa</small></span><span class="res-tog-chev">▼</span></div>
+  <div class="res-section-label toggle" onclick="toggleRes(this)"><span>🏨 Hotéis — Reservados</span><span class="res-tog-count">12 hotéis · 16 noites</span><span class="res-tog-total">1.776,33 €<small>592,11 €/pessoa</small></span><span class="res-tog-chev">▼</span></div>
   <div class="res-collapse">
   <div class="res-table" style="margin-top:0">
     <div class="res-row-head"><span>Local</span><span>Hotel <small>(toca para abrir no Booking)</small></span><span>Datas</span><span style="text-align:right">Valor grupo</span></div>
-    <div class="res-row"><div><div class="res-route">Sarande</div></div><div class="res-type"><a href="https://www.booking.com/Share-PSxB78" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Luxury Villa Alisja with Private Beach</a></div><div class="res-info">12–15 Set · 3 noites</div><div class="res-price pend-c">389,00 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">📅 pagar 29/08</small></div></div>
+    <div class="res-row"><div><div class="res-route">Sarande</div></div><div class="res-type"><a href="https://www.booking.com/Share-PSxB78" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Luxury Villa Alisja with Private Beach</a></div><div class="res-info">12–15 Set · 3 noites</div><div class="res-price paid-c">398,91 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 29/08</small></div></div>
     <div class="res-row"><div><div class="res-route">Vlore</div></div><div class="res-type"><a href="https://www.booking.com/Share-nYMjr7" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">PATIO Lungomare</a></div><div class="res-info">15–16 Set · 1 noite</div><div class="res-price pend-c">90,00 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">📅 pagar 12/09</small></div></div> <div class="res-row"><div><div class="res-route">Dhermi</div></div><div class="res-type"><a href="https://www.booking.com/Share-CePDgK" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Te'Dreri — Llogora Tourist Village</a></div><div class="res-info">16–17 Set · 1 noite</div><div class="res-price pend-c">81,30 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">📅 pagar 02/09</small></div></div>
     <div class="res-row"><div><div class="res-route">Parga</div></div><div class="res-type"><a href="https://www.booking.com/Share-wT6bI2" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Suites of Happiness</a></div><div class="res-info">17–18 Set · 1 noite</div><div class="res-price paid-c">99,54 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 05/07</small></div></div>
-    <div class="res-row"><div><div class="res-route">Meteora</div></div><div class="res-type"><a href="https://www.booking.com/Share-FOWXkeT" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Meteora Superior Collection Villas</a></div><div class="res-info">18–19 Set · 1 noite</div><div class="res-price pend-c">82,45 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">📅 pagar 02/09</small></div></div>
+    <div class="res-row"><div><div class="res-route">Meteora</div></div><div class="res-type"><a href="https://www.booking.com/Share-FOWXkeT" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Meteora Superior Collection Villas</a></div><div class="res-info">18–19 Set · 1 noite</div><div class="res-price paid-c">82,45 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 02/09</small></div></div>
     <div class="res-row"><div><div class="res-route">Delfos</div></div><div class="res-type"><a href="https://www.booking.com/Share-TPnONdv" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Amalia Hotel Delphi</a></div><div class="res-info">19–20 Set · 1 noite</div><div class="res-price pend-c">159,40 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">📅 pagar 14/09</small></div></div>
     <div class="res-row"><div><div class="res-route">Atenas</div></div><div class="res-type"><a href="https://www.booking.com/Share-3ccO4N" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Heart of Athens</a></div><div class="res-info">20–22 Set · 2 noites</div><div class="res-price paid-c">167,11 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 05/07</small></div></div>
-    <div class="res-row"><div><div class="res-route">Náuplia</div></div><div class="res-type"><a href="https://www.booking.com/Share-R6hJXc" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Palacio del Sol Luxury Apartments</a></div><div class="res-info">22–23 Set · 1 noite</div><div class="res-price pend-c">116,97 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">📅 pagar 29/08</small></div></div>
-    <div class="res-row"><div><div class="res-route">Nafpaktos</div></div><div class="res-type"><a href="https://www.booking.com/Share-1qzpjf" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Battaglia Al Mare</a></div><div class="res-info">23–24 Set · 1 noite</div><div class="res-price pend-c">158,34 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">📅 pagar 06/09</small></div></div>
+    <div class="res-row"><div><div class="res-route">Náuplia</div></div><div class="res-type"><a href="https://www.booking.com/Share-R6hJXc" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Palacio del Sol Luxury Apartments</a></div><div class="res-info">22–23 Set · 1 noite</div><div class="res-price paid-c">116,97 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 29/08</small></div></div>
+    <div class="res-row"><div><div class="res-route">Nafpaktos</div></div><div class="res-type"><a href="https://www.booking.com/Share-1qzpjf" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Battaglia Al Mare</a></div><div class="res-info">23–24 Set · 1 noite</div><div class="res-price paid-c">158,35 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 06/09</small></div></div>
     <div class="res-row"><div><div class="res-route">Lefkada</div></div><div class="res-type"><a href="https://www.booking.com/Share-294RcM" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Blue Star Aparthotel</a></div><div class="res-info">24–25 Set · 1 noite</div><div class="res-price paid-c">87,54 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 05/07</small></div></div>
-    <div class="res-row"><div><div class="res-route">Preveza</div></div><div class="res-type"><a href="https://www.booking.com/Share-3gf2esU" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Che Bello Nature</a></div><div class="res-info">25–26 Set · 1 noite</div><div class="res-price pend-c">102,00 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">📅 pagar 02/09</small></div></div>
+    <div class="res-row"><div><div class="res-route">Preveza</div></div><div class="res-type"><a href="https://www.booking.com/Share-3gf2esU" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Che Bello Nature</a></div><div class="res-info">25–26 Set · 1 noite</div><div class="res-price paid-c">102,00 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 02/09</small></div></div>
     <div class="res-row"><div><div class="res-route">Corfu</div></div><div class="res-type"><a href="https://www.booking.com/Share-AVA7QRr" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline">Tessera Boutique Hotel & Villas</a></div><div class="res-info">26–28 Set · 2 noites</div><div class="res-price paid-c">232,76 €<br><small style="font-weight:600;font-size:9px;color:var(--muted)">✅ pago 05/07</small></div></div>
-    <div class="res-row" style="background:#f0fdf4"><div><div class="res-route">Subtotal pago</div></div><div class="res-type">Parga · Atenas · Lefkada · Corfu</div><div class="res-info">195,65 €/pessoa</div><div class="res-price paid-c">586,95 €</div></div>
-    <div class="res-row" style="background:#fffbeb"><div><div class="res-route">Subtotal a pagar</div></div><div class="res-type">7 hotéis · pagamentos agendados</div><div class="res-info">376,05 €/pessoa</div><div class="res-price pend-c">1.179,46 €</div></div>
-    <div class="res-row" style="background:#f1f5f9"><div><div class="res-route" style="font-weight:800">Total alojamento</div></div><div class="res-type">16 noites · 3 pessoas</div><div class="res-info">588,80 €/pessoa · 35,73 €/noite</div><div class="res-price" style="color:var(--navy);font-weight:800">1.766,41 €</div></div>
+    <div class="res-row" style="background:#f0fdf4"><div><div class="res-route">Subtotal pago</div></div><div class="res-type">9 hotéis · pagos</div><div class="res-info">481,88 €/pessoa</div><div class="res-price paid-c">1.445,63 €</div></div>
+    <div class="res-row" style="background:#fffbeb"><div><div class="res-route">Subtotal a pagar</div></div><div class="res-type">Vlore · Dhermi · Delfos</div><div class="res-info">110,23 €/pessoa</div><div class="res-price pend-c">330,70 €</div></div>
+    <div class="res-row" style="background:#f1f5f9"><div><div class="res-route" style="font-weight:800">Total alojamento</div></div><div class="res-type">16 noites · 3 pessoas</div><div class="res-info">592,11 €/pessoa · 37,01 €/noite</div><div class="res-price" style="color:var(--navy);font-weight:800">1.776,33 €</div></div>
   </div>
   </div>
 
   <div class="res-note">
     💡 <strong>Nota sobre os fusos horários:</strong> A Grécia (Corfu, Atenas) está 2h à frente de Portugal e 1h à frente da Albânia. Por isso o barco Corfu → Sarande parte às 20:30 (hora grega) e chega às 20:00 (hora albanesa) — "recuas" 1 hora ao atravessar a fronteira.<br><br>
-    📊 <strong>Ponto de situação — tudo reservado:</strong> Transportes 2.349,27 € (voos + 4 barcos 1.502,10 € já pagos + 2 carros 847,17 € a pagar) e alojamento 1.766,41 € (586,95 € pagos + 1.179,46 € a pagar). <strong>Total da viagem: 4.115,68 € para o grupo</strong> (1.371,89 €/pessoa) — 2.089,05 € já pagos e 2.026,63 € com pagamento agendado. Os nomes dos hotéis são links diretos para o Booking.
+    📊 <strong>Ponto de situação — tudo reservado:</strong> Transportes 2.349,27 € (voos + 4 barcos 1.502,10 € já pagos + 2 carros 847,17 € a pagar) e alojamento 1.776,33 € (1.445,63 € pagos + 330,70 € a pagar). <strong>Total da viagem: 4.125,60 € para o grupo</strong> (1.375,20 €/pessoa) — 2.947,73 € já pagos e 1.177,87 € com pagamento agendado. Os nomes dos hotéis são links diretos para o Booking.
   </div>
 </div>
 
@@ -439,20 +476,20 @@ footer strong{color:white}
       <div class="brow"><span class="blabel">🚗 Carro albanês · Alamo <small style="color:#16a34a">(real)</small></span><span class="bval">84 €</span></div>
       <div class="brow"><span class="blabel">🚗 Carro grego · Value Plus <small style="color:#16a34a">(real)</small></span><span class="bval">198 €</span></div>
       <div class="brow"><span class="blabel">⛴ Barcos · 4 travessias <small style="color:#16a34a">(real)</small></span><span class="bval">111 €</span></div>
-      <div class="brow"><span class="blabel">🏨 Alojamento · 16 noites <small style="color:#16a34a">(real)</small></span><span class="bval">572 €</span></div>
-      <div class="brow" style="background:#f0fdf4;font-weight:700"><span class="blabel">🔒 Subtotal reservado (fechado)</span><span class="bval">1.355 €</span></div>
+      <div class="brow"><span class="blabel">🏨 Alojamento · 16 noites <small style="color:#16a34a">(real)</small></span><span class="bval">592 €</span></div>
+      <div class="brow" style="background:#f0fdf4;font-weight:700"><span class="blabel">🔒 Subtotal reservado (fechado)</span><span class="bval">1.375 €</span></div>
       <div class="brow"><span class="blabel">🍽 Alimentação (Alb. ~25€/dia + Gr. ~40€/dia) <small style="color:#b45309">(est.)</small></span><span class="bval">450–560 €</span></div>
       <div class="brow"><span class="blabel">🎟 Entradas (Acrópole, Butrint, Meteora…) <small style="color:#b45309">(est.)</small></span><span class="bval">80–120 €</span></div>
       <div class="brow"><span class="blabel">⛽ Combustível + portagens + extras <small style="color:#b45309">(est.)</small></span><span class="bval">60–90 €</span></div>
-      <div class="btotal"><span class="bt-lbl">✅ Total por pessoa</span><span class="bt-val">1.945 – 2.125 €</span></div>
+      <div class="btotal"><span class="bt-lbl">✅ Total por pessoa</span><span class="bt-val">1.965 – 2.145 €</span></div>
     </div>
-    <p class="budget-note">🔒 Já fechado: 1.355 €/pessoa — 4.115,68 € para o grupo (transportes + alojamento). O resto é estimativa de despesa no local (refeições, entradas, combustível). Praticamente no objetivo de ~2.000 €/pessoa.</p>
+    <p class="budget-note">🔒 Já fechado: 1.375 €/pessoa — 4.125,60 € para o grupo (transportes + alojamento). O resto é estimativa de despesa no local (refeições, entradas, combustível). Praticamente no objetivo de ~2.000 €/pessoa.</p>
   </div>
 </div>
 </div>
 
 <footer>
-  <p>Roteiro preparado para <strong>Gonçalo Vieira</strong> · Partner @ Digit</p>
+  <p>Roteiro preparado por <strong>Gonçalo Vieira</strong> · Partner @ Vanguard Viagens</p>
   <p style="margin-top:.4rem;opacity:.6">Albânia &amp; Grécia · Setembro 2026 · 17 dias de aventura e cultura</p>
 </footer>
 
@@ -755,6 +792,80 @@ buildCalendar();
 buildLegend();
 buildDays();
 initResCollapse();
+
+
+// ── MAPA DA VIAGEM ──────────────────────────────────────────────────────────
+function initTripMap(){
+  const stops = [
+    {n:'1·13', name:'Corfu', lat:39.6243, lng:19.9217, cls:'cf',
+     pop:'<b>Corfu — início e fim</b><br><span class="pp-dates">12 Set (chegada) · 26–28 Set (2 noites)</span><br><span class="pp-hotel">🏨 Tessera Boutique Hotel &amp; Villas</span><br>✈ Regresso a Lisboa dia 28'},
+    {n:'2', name:'Sarande', lat:39.8756, lng:20.0053, cls:'al',
+     pop:'<b>Sarande</b><br><span class="pp-dates">12–15 Set · 3 noites</span><br><span class="pp-hotel">🏨 Luxury Villa Alisja with Private Beach</span><br>Base para Ksamil, Butrint, Blue Eye e Gjirokastër'},
+    {n:'3', name:'Vlorë', lat:40.4661, lng:19.4914, cls:'al',
+     pop:'<b>Vlorë</b><br><span class="pp-dates">15–16 Set · 1 noite</span><br><span class="pp-hotel">🏨 PATIO Lungomare</span>'},
+    {n:'4', name:'Dhermi', lat:40.1517, lng:19.6414, cls:'al',
+     pop:'<b>Dhermi / Llogara</b><br><span class="pp-dates">16–17 Set · 1 noite</span><br><span class="pp-hotel">🏨 Te&#39;Dreri — Llogora Tourist Village</span><br>Riviera Albanesa'},
+    {n:'5', name:'Parga', lat:39.2853, lng:20.4008, cls:'',
+     pop:'<b>Parga</b><br><span class="pp-dates">17–18 Set · 1 noite</span><br><span class="pp-hotel">🏨 Suites of Happiness</span>'},
+    {n:'6', name:'Meteora', lat:39.7071, lng:21.6307, cls:'',
+     pop:'<b>Meteora</b><br><span class="pp-dates">18–19 Set · 1 noite</span><br><span class="pp-hotel">🏨 Meteora Superior Collection Villas</span>'},
+    {n:'7', name:'Delfos', lat:38.4824, lng:22.5010, cls:'',
+     pop:'<b>Delfos</b><br><span class="pp-dates">19–20 Set · 1 noite</span><br><span class="pp-hotel">🏨 Amalia Hotel Delphi</span>'},
+    {n:'8', name:'Atenas', lat:37.9838, lng:23.7275, cls:'',
+     pop:'<b>Atenas</b><br><span class="pp-dates">20–22 Set · 2 noites</span><br><span class="pp-hotel">🏨 Heart of Athens</span><br>Acrópole &amp; centro histórico'},
+    {n:'9', name:'Náuplia', lat:37.5675, lng:22.8016, cls:'',
+     pop:'<b>Náuplia</b><br><span class="pp-dates">22–23 Set · 1 noite</span><br><span class="pp-hotel">🏨 Palacio del Sol Luxury Apartments</span>'},
+    {n:'10', name:'Nafpaktos', lat:38.3919, lng:21.8272, cls:'',
+     pop:'<b>Nafpaktos</b><br><span class="pp-dates">23–24 Set · 1 noite</span><br><span class="pp-hotel">🏨 Battaglia Al Mare</span>'},
+    {n:'11', name:'Lefkada', lat:38.8302, lng:20.7050, cls:'',
+     pop:'<b>Lefkada</b><br><span class="pp-dates">24–25 Set · 1 noite</span><br><span class="pp-hotel">🏨 Blue Star Aparthotel</span>'},
+    {n:'12', name:'Preveza', lat:38.9560, lng:20.7517, cls:'',
+     pop:'<b>Preveza</b><br><span class="pp-dates">25–26 Set · 1 noite</span><br><span class="pp-hotel">🏨 Che Bello Nature</span><br>⛴ Ferry Igoumenitsa → Corfu dia 26'}
+  ];
+  const pois = [
+    {name:'Ksamil', lat:39.7686, lng:20.0006},
+    {name:'Butrint', lat:39.7461, lng:20.0208},
+    {name:'Blue Eye (Syri i Kaltër)', lat:39.9236, lng:20.1919},
+    {name:'Gjirokastër', lat:40.0758, lng:20.1389}
+  ];
+  const IGM = [39.5036, 20.2653]; // Porto de Igoumenitsa
+  const CFU = [39.6243, 19.9217], SAR = [39.8756, 20.0053];
+
+  const map = L.map('trip-map', {scrollWheelZoom:false});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom:19
+  }).addTo(map);
+  map.on('click', () => map.scrollWheelZoom.enable());
+
+  const markers = [];
+  stops.forEach(s => {
+    const icon = L.divIcon({className:'', html:'<div class="num-pin '+s.cls+'">'+s.n+'</div>', iconSize:[28,28], iconAnchor:[14,14]});
+    markers.push(L.marker([s.lat, s.lng], {icon, title:s.name}).addTo(map).bindPopup(s.pop));
+  });
+  pois.forEach(p => {
+    const icon = L.divIcon({className:'', html:'<div class="poi-pin"></div>', iconSize:[12,12], iconAnchor:[6,6]});
+    L.marker([p.lat, p.lng], {icon, title:p.name}).addTo(map)
+      .bindPopup('<b>'+p.name+'</b><br><span class="pp-hotel">Visita a partir de Sarande</span>');
+  });
+
+  const road = {color:'#1a2e4a', weight:3, opacity:.75};
+  const ferry = {color:'#0f6e56', weight:3, opacity:.85, dashArray:'8 8'};
+  const pt = i => [stops[i].lat, stops[i].lng];
+
+  // Albânia (carro 1): Sarande → Vlorë → Dhermi → Sarande
+  L.polyline([SAR, pt(2), pt(3), SAR], road).addTo(map);
+  // Grécia (carro 2): Igoumenitsa → Parga → Meteora → Delfos → Atenas → Náuplia → Nafpaktos → Lefkada → Preveza → Igoumenitsa
+  L.polyline([IGM, pt(4), pt(5), pt(6), pt(7), pt(8), pt(9), pt(10), pt(11), IGM], road).addTo(map);
+  // Ferries
+  L.polyline([CFU, SAR], ferry).addTo(map);   // 12 e 17 Set — Corfu ↔ Sarande
+  L.polyline([CFU, IGM], ferry).addTo(map);   // 17 e 26 Set — Corfu ↔ Igoumenitsa
+
+  map.fitBounds(L.latLngBounds(stops.map(s => [s.lat, s.lng])).pad(0.08));
+  setTimeout(() => map.invalidateSize(), 300);
+}
+initTripMap();
+
 
 </script>
 </body>
